@@ -1,9 +1,9 @@
-#Creating the webapp VM
-resource "azurerm_virtual_machine" "webapp" {
+# Creating the db VM
+resource "azurerm_virtual_machine" "mongodb" {
   location              = azurerm_resource_group.my_resource_group.location
-  name                  = "webapp"
+  name                  = "mongodb"
   network_interface_ids = [
-    azurerm_network_interface.webapp_ni.id,
+    azurerm_network_interface.mongodb_ni.id,
   ]
   resource_group_name              = azurerm_resource_group.my_resource_group.name
   vm_size                          = "Standard_B1ls"
@@ -12,16 +12,16 @@ resource "azurerm_virtual_machine" "webapp" {
   delete_os_disk_on_termination    = true
 
   os_profile {
-    admin_username = "webapp"
-    computer_name  = "webapp"
+    admin_username = "mongodb"
+    computer_name  = "mongodb"
   }
 
   os_profile_linux_config {
     disable_password_authentication = true
 
     ssh_keys {
-      key_data = tls_private_key.webapp_key.public_key_openssh
-      path     = "/home/webapp/.ssh/authorized_keys"
+      key_data = tls_private_key.mongodb_key.public_key_openssh
+      path     = "/home/mongodb/.ssh/authorized_keys"
     }
   }
 
@@ -38,7 +38,7 @@ resource "azurerm_virtual_machine" "webapp" {
     disk_size_gb      = 30
     managed_disk_type = "Standard_LRS"
     os_type           = "Linux"
-    name              = "webapp_disk"
+    name              = "mongodb_disk"
   }
 
   tags = {
@@ -49,7 +49,7 @@ resource "azurerm_virtual_machine" "webapp" {
   }
 
   provisioner "local-exec" {
-    command = "sleep 140 && python3 createInventory.py && ansible-playbook ./provision/playbooks/playbook_webapps.yml -i ./provision/inventory/inventory"
+    command = "sleep 140 && python3 createInventory.py && ansible-playbook ./provision/playbooks/playbook_dbs.yml -i ./provision/inventory/inventory"
   }
 
 }

@@ -15,18 +15,14 @@
     - name: Downloading repo
       shell: "wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -"     
     - name: Adding repo
-      ansible.builtin.apt_repository:
-        repo: deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse
-        state: present
+      shell: "sudo add-apt-repository 'deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse'"
     - name: Downloading MongoDB
       apt:
         name=mongodb-org
         state=present
     - name: Changing config file
-      copy:
-        src=/home/vagrant/mongod.conf
-        dest=/etc/mongod.conf
+      shell: "sudo sed -i 's/127.0.0.1/10.0.2.6/g' /etc/mongod.conf"
     - name: Start MongoDB
-      ansible.builtin.systemd:
+      systemd:
         state: started
         name: mongod

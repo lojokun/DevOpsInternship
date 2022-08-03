@@ -16,6 +16,8 @@
         update: yes
     - name: Copying the application
       shell: "cp -rf /tmp/app /home/webapp/app"
+    - name: Modifying app.py
+      shell: "sed -i 's/localhost/10.0.2.6/g' /home/webapp/app/app.py"
     - name: Installing pip
       apt:
         name: python3-pip

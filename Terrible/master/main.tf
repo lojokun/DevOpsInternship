@@ -40,7 +40,7 @@ resource "azurerm_virtual_network" "vnet1" {
 # Creating a Security Group
 resource "azurerm_network_security_group" "ports" {
   location            = azurerm_resource_group.my_resource_group.location
-  name                = "webapp-nsg"
+  name                = "environment-nsg"
   resource_group_name = azurerm_resource_group.my_resource_group.name
   security_rule       = [
     {
@@ -64,7 +64,7 @@ resource "azurerm_network_security_group" "ports" {
     {
       access                                     = "Allow"
       description                                = ""
-      destination_address_prefix                 = "*"
+      destination_address_prefix                 = "10.0.2.5"
       destination_address_prefixes               = []
       destination_application_security_group_ids = []
       destination_port_range                     = "80"
@@ -79,10 +79,31 @@ resource "azurerm_network_security_group" "ports" {
       source_port_range                          = "*"
       source_port_ranges                         = []
     },
+    {
+      access                                     = "Allow"
+      description                                = ""
+      destination_address_prefix                 = "10.0.2.6"
+      destination_address_prefixes               = []
+      destination_application_security_group_ids = []
+      destination_port_range                     = "27017"
+      destination_port_ranges                    = []
+      direction                                  = "Inbound"
+      name                                       = "MongoDB"
+      priority                                   = 340
+      protocol                                   = "Tcp"
+      source_address_prefix                      = "10.0.2.5"
+      source_address_prefixes                    = []
+      source_application_security_group_ids      = []
+      source_port_range                          = "*"
+      source_port_ranges                         = []
+    },
   ]
-  tags = {}
-
-  timeouts {}
+  tags = {
+    Owner        = local.Owner
+    CreatedBy    = local.CreatedBy
+    CreationDate = local.CreationDate
+    Purpose      = local.Purpose
+  }
 }
 # Creating a Subnet Mask
 resource "azurerm_subnet" "internal" {
@@ -99,52 +120,112 @@ resource "azurerm_subnet_network_security_group_association" "subnet_ports" {
   subnet_id                 = azurerm_subnet.internal.id
 }
 
-# Creating Network Interface
-resource "azurerm_network_interface" "main" {
+# Creating the Network Interface for webapp VM
+resource "azurerm_network_interface" "webapp_ni" {
   enable_accelerated_networking = false
   enable_ip_forwarding          = false
   location                      = azurerm_resource_group.my_resource_group.location
-  name                          = "webapp638"
+  name                          = "webapp_ni"
   resource_group_name           = azurerm_resource_group.my_resource_group.name
-  tags                          = {}
 
   ip_configuration {
     name                          = "ipconfig1"
     primary                       = true
     private_ip_address            = "10.0.2.5"
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
     private_ip_address_version    = "IPv4"
     public_ip_address_id          = azurerm_public_ip.webapp_ip.id
     subnet_id                     = azurerm_subnet.internal.id
   }
 
-  timeouts {}
+  tags = {
+    Owner        = local.Owner
+    CreatedBy    = local.CreatedBy
+    CreationDate = local.CreationDate
+    Purpose      = local.Purpose
+  }
+}
+# Creating the Network Interface for mongodb VM
+resource "azurerm_network_interface" "mongodb_ni" {
+  enable_accelerated_networking = false
+  enable_ip_forwarding          = false
+  location                      = azurerm_resource_group.my_resource_group.location
+  name                          = "mongodb_ni"
+  resource_group_name           = azurerm_resource_group.my_resource_group.name
+
+  ip_configuration {
+    name                          = "ipconfig1"
+    primary                       = true
+    private_ip_address            = "10.0.2.6"
+    private_ip_address_allocation = "Static"
+    private_ip_address_version    = "IPv4"
+    public_ip_address_id          = azurerm_public_ip.mongodb_ip.id
+    subnet_id                     = azurerm_subnet.internal.id
+  }
+
+  tags = {
+    Owner        = local.Owner
+    CreatedBy    = local.CreatedBy
+    CreationDate = local.CreationDate
+    Purpose      = local.Purpose
+  }
 }
 
-# Creating a TLS Private Key
-resource "tls_private_key" "linux_key" {
+# Creating a TLS Private Key for webapp VM
+resource "tls_private_key" "webapp_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
 # Storing the private key locally
-resource "local_file" "linux_key_local" {
-  filename = "linuxkey.pem"
-  content  = tls_private_key.linux_key.private_key_pem
+resource "local_file" "webapp_key_local" {
+  filename = "webapp_key.pem"
+  content  = tls_private_key.webapp_key.private_key_pem
+  provisioner "local-exec" {
+    command = "cp ./webapp_key.pem /home/vagrant/.ssh/webapp_key.pem"
+  }
+}
+# Creating a TLS Private Key for mongodb VM
+resource "tls_private_key" "mongodb_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+# Storing the private key locally
+resource "local_file" "mongodb_local" {
+  filename = "mongodb_key.pem"
+  content  = tls_private_key.mongodb_key.private_key_pem
+  provisioner "local-exec" {
+    command = "cp ./mongodb_key.pem /home/vagrant/.ssh/mongodb_key.pem"
+  }
 }
 
 # Creating a Public IP resource
 resource "azurerm_public_ip" "webapp_ip" {
-  name                = "acceptanceTestPublicIp1"
+  name                = "webapp_PublicIp"
   resource_group_name = azurerm_resource_group.my_resource_group.name
   location            = azurerm_resource_group.my_resource_group.location
   allocation_method   = "Dynamic"
 
   tags = {
-    Owner = local.Owner
+    Owner        = local.Owner
+    CreatedBy    = local.CreatedBy
+    CreationDate = local.CreationDate
+    Purpose      = local.Purpose
   }
-}
 
-output "public_ip" {
-  value = azurerm_public_ip.webapp_ip.ip_address
+}
+resource "azurerm_public_ip" "mongodb_ip" {
+  name                = "mongodb_PublicIp"
+  resource_group_name = azurerm_resource_group.my_resource_group.name
+  location            = azurerm_resource_group.my_resource_group.location
+  allocation_method   = "Dynamic"
+
+  tags = {
+    Owner        = local.Owner
+    CreatedBy    = local.CreatedBy
+    CreationDate = local.CreationDate
+    Purpose      = local.Purpose
+  }
+
 }
