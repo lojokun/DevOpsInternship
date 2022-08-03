@@ -1,0 +1,27 @@
+---
+- hosts: webapps
+  become: true
+  tasks:
+    - name: Download Webapp
+      git:
+        repo: https://github.com/LukePeters/User-Login-System-Tutorial
+        dest: /tmp/app
+        clone: yes
+        update: yes
+    - name: Copying the application
+      shell: "cp -rf /tmp/app /home/vagrant/app"
+    - name: Changing app.py
+      copy:
+        src=/home/vagrant/app.py
+        dest=/home/vagrant/app/app.py
+    - name: Installing neccessities
+      ansible.builtin.pip:
+        name:
+          - flask>=2.1.0
+          - flask_mongoengine==1.0.0
+          - passlib>=1.7.0
+          - gunicorn>=20.0.0
+    - name: Starting webapp
+      shell: "cd /home/vagrant/app && python3 -m gunicorn -w 1 -b 10.0.0.5:5000 app:app --daemon"    
+      environment:
+        FLASK_APP: /home/vagrant/app/app.py

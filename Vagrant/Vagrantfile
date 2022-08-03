@@ -1,0 +1,21 @@
+Vagrant.configure("2") do |config|
+
+	# => MongoDB Box
+		config.vm.define "db" do |db|
+			db.vm.box = "hashicorp/bionic64"
+			db.vm.hostname = "mongodb"
+			db.vm.network "private_network", ip: "10.0.0.5", netmask: "255.255.255.0", auto_config: true
+			db.vm.provision "file", source: "./mongodb.conf", destination: "/tmp/mongodb.conf"
+			db.vm.provision "shell", path: "./db_init.sh"
+		end
+
+	# => WebApp Box
+	config.vm.define "webapp" do |webapp|
+		webapp.vm.box = "hashicorp/bionic64"
+		webapp.vm.hostname = "webapp"
+		webapp.vm.network "private_network", ip: "10.0.0.2", netmask: "255.255.255.0", auto_config: true
+		webapp.vm.provision "file", source: "./app.py", destination: "/tmp/app.py"
+		webapp.vm.provision "shell", path: "./webapp_init.sh"
+	end
+
+end

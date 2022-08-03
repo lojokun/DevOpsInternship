@@ -1,0 +1,32 @@
+---
+- hosts: dbs
+  become: true
+  tasks:
+    - name: Downloading neccessities
+      apt:
+        pkg:
+          - dirmngr
+          - gnupg
+          - apt-transport-https
+          - ca-certificates
+          - software-properties-common
+        state: latest
+        update_cache: true
+    - name: Downloading repo
+      shell: "wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -"     
+    - name: Adding repo
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse
+        state: present
+    - name: Downloading MongoDB
+      apt:
+        name=mongodb-org
+        state=present
+    - name: Changing config file
+      copy:
+        src=/home/vagrant/mongod.conf
+        dest=/etc/mongod.conf
+    - name: Start MongoDB
+      ansible.builtin.systemd:
+        state: started
+        name: mongod

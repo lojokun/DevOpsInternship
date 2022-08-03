@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:experimental
+FROM mongo:4.4.6
+WORKDIR ~
+COPY . /etc
+RUN chmod +x /etc/basic_init.sh
+RUN /etc/basic_init.sh
+#CMD systemctl stop mongod ; systemctl start mongod # NEVER EVER WRITE THIS SHIT ON DOCKER
+EXPOSE 27017 

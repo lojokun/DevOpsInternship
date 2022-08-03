@@ -1,0 +1,1 @@
+cp ./provision/inventory/inventory.backup ./provision/inventory/inventory

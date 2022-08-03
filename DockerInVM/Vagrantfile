@@ -1,0 +1,28 @@
+Vagrant.configure("2") do |config|
+  
+   # => WebApp Box
+  config.vm.define "webapp" do |webapp|
+    webapp.vm.box = "generic/ubuntu2204"
+    webapp.vm.hostname = "webapp"
+    webapp.vm.network "private_network", ip: "10.0.0.2", netmask: "255.255.255.0", auto_config: true
+    webapp.vm.network "forwarded_port", host: 5000, guest: 5000
+    webapp.vm.provision "file", source: "webapp/Dockerfile_webapp", destination: "/tmp/Dockerfile"
+    webapp.vm.provision "file", source: "webapp/basic_init.sh", destination: "/tmp/basic_init.sh"
+    webapp.vm.provision "file", source: "webapp/requirements.txt", destination: "/tmp/requirements.txt"
+    webapp.vm.provision "file", source: "webapp/app.py", destination: "/tmp/app.py"
+    webapp.vm.provision "shell", path:"webapp/webapp_init.sh"
+  end
+
+  # => MongoDB Box
+  config.vm.define "db" do |db|
+      db.vm.box = "generic/ubuntu2204"
+      db.vm.hostname = "mongodb"
+      db.vm.network "private_network", ip: "10.0.0.5", netmask: "255.255.255.0", auto_config: true
+      db.vm.network "forwarded_port", host:27017, guest: 27017
+      db.vm.provision "file", source: "db/Dockerfile_db", destination: "/tmp/Dockerfile"
+      db.vm.provision "file", source: "db/basic_init.sh", destination: "/tmp/basic_init.sh"
+      db.vm.provision "file", source: "db/mongod.conf.orig", destination: "/tmp/mongod.conf.orig"
+      db.vm.provision "shell", path:"db/db_init.sh"
+    end
+
+end

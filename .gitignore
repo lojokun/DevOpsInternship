@@ -1,0 +1,10 @@
+.idea/
+.DS_Store
+__pycache__/
+env/
+*.pyc
+.vagrant
+.terraform
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
