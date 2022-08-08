@@ -1,0 +1,18 @@
+[webapps]
+webapp1
+
+[dbs]
+db1
+
+[all:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+ansible_python_interpreter=/usr/bin/python3
+ansible_ssh_user=ubuntu
+
+[webapps:vars]
+ansible_ssh_host={webapp_ip}
+ansible_ssh_private_key_file=/home/vagrant/.ssh/webapp-key.pem
+
+[dbs:vars]
+ansible_ssh_host={mongodb_ip}
+ansible_ssh_private_key_file=/home/vagrant/.ssh/mongodb-key.pem

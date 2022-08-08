@@ -9,3 +9,7 @@ env/
 terraform.tfstate
 terraform.tfstate.backup
 *.retry
+access.key
+secret.key
+webapp-key.pem
+mongodb-key.pem

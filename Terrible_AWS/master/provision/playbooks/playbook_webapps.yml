@@ -1,0 +1,34 @@
+---
+- hosts: webapps
+  become: true
+  tasks:
+#    - name: Echo Hello World
+#      shell: echo Hello World
+    - name: Updating repository cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: Download Webapp
+      git:
+        repo: https://github.com/LukePeters/User-Login-System-Tutorial
+        dest: /home/ubuntu/app
+        clone: yes
+        update: yes
+        force: yes
+    - name: Modifying app.py
+      shell: "sed -i 's/localhost/10.0.2.6/g' /home/ubuntu/app/app.py"
+    - name: Installing pip
+      apt:
+        name: python3-pip
+        state: present
+    - name: Installing necessities
+      pip:
+        name:
+          - flask>=2.1.0
+          - flask_mongoengine==1.0.0
+          - passlib>=1.7.0
+          - gunicorn>=20.0.0
+    - name: Starting webapp
+      shell: "cd /home/ubuntu/app && sudo python3 -m gunicorn -w 1 -b 0.0.0.0:80 app:app --daemon"
+      environment:
+        FLASK_APP: /home/vagrant/app/app.py
