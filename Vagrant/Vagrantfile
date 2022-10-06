@@ -1,13 +1,13 @@
 Vagrant.configure("2") do |config|
 
 	# => MongoDB Box
-		config.vm.define "db" do |db|
-			db.vm.box = "hashicorp/bionic64"
-			db.vm.hostname = "mongodb"
-			db.vm.network "private_network", ip: "10.0.0.5", netmask: "255.255.255.0", auto_config: true
-			db.vm.provision "file", source: "./mongodb.conf", destination: "/tmp/mongodb.conf"
-			db.vm.provision "shell", path: "./db_init.sh"
-		end
+	config.vm.define "db" do |db|
+		db.vm.box = "hashicorp/bionic64"
+		db.vm.hostname = "mongodb"
+		db.vm.network "private_network", ip: "10.0.0.5", netmask: "255.255.255.0", auto_config: true
+		db.vm.provision "file", source: "./mongodb.conf", destination: "/tmp/mongodb.conf"
+		db.vm.provision "shell", path: "./db_init.sh"
+	end
 
 	# => WebApp Box
 	config.vm.define "webapp" do |webapp|
